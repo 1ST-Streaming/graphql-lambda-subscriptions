@@ -17,7 +17,7 @@ export const disconnect: MessageHandler<null> = async ({ server, event }) => {
     const topicSubscriptions = await collect(server.models.subscription.query({
       IndexName: 'ConnectionIndex',
       ExpressionAttributeNames: { '#a': 'connectionId' },
-      ExpressionAttributeValues: { ':1': connectionId },
+      ExpressionAttributeValues: { ':1': { S: connectionId } },
       KeyConditionExpression: '#a = :1',
     }))
 

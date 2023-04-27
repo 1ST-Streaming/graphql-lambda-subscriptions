@@ -1,6 +1,7 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import { collect } from 'streaming-iterables'
 import { ServerClosure, Subscription } from '../types'
+import { AttributeValue } from '@aws-sdk/client-dynamodb'
 
 export const getFilteredSubs = async ({ server, event }: { server: Omit<ServerClosure, 'gateway'>, event: { topic: string, payload?: Record<string, any> } }): Promise<Subscription[]> => {
   if (!event.payload || Object.keys(event.payload).length === 0) {
@@ -9,7 +10,7 @@ export const getFilteredSubs = async ({ server, event }: { server: Omit<ServerCl
     const iterator = server.models.subscription.query({
       IndexName: 'TopicIndex',
       ExpressionAttributeNames: { '#a': 'topic' },
-      ExpressionAttributeValues: { ':1': event.topic },
+      ExpressionAttributeValues: { ':1': { S: event.topic } },
       KeyConditionExpression: '#a = :1',
     })
 
@@ -18,14 +19,14 @@ export const getFilteredSubs = async ({ server, event }: { server: Omit<ServerCl
   const flattenPayload = collapseKeys(event.payload)
 
   const filterExpressions: string[] = []
-  const expressionAttributeValues: { [key: string]: string | number | boolean } = {}
+  const expressionAttributeValues: Record<string, AttributeValue> = {}
   const expressionAttributeNames: { [key: string]: string } = {}
 
   let attributeCounter = 0
   for (const [key, value] of Object.entries(flattenPayload)) {
     const aliasNumber = attributeCounter++
     expressionAttributeNames[`#${aliasNumber}`] = key
-    expressionAttributeValues[`:${aliasNumber}`] = value
+    expressionAttributeValues[`:${aliasNumber}`] = typeof value === 'boolean' ? { BOOL: value } : typeof value === 'number' ? { N: `${value}` } : { S: value }
     filterExpressions.push(`(#filter.#${aliasNumber} = :${aliasNumber} OR attribute_not_exists(#filter.#${aliasNumber}))`)
   }
 
@@ -39,7 +40,7 @@ export const getFilteredSubs = async ({ server, event }: { server: Omit<ServerCl
       ...expressionAttributeNames,
     },
     ExpressionAttributeValues: {
-      ':hashKey': event.topic,
+      ':hashKey': { S: event.topic },
       ...expressionAttributeValues,
     },
     KeyConditionExpression: '#hashKey = :hashKey',

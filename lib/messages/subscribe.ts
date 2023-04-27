@@ -121,7 +121,7 @@ const setupSubscription: MessageHandler<SubscribeMessage> = async ({ server, eve
         '#id': 'id',
       },
       ExpressionAttributeValues: {
-        ':id': subscriptionId,
+        ':id': { S: subscriptionId },
       },
     })
   } catch (error) {

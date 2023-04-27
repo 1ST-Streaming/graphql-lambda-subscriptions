@@ -1,4 +1,4 @@
-import { ApiGatewayManagementApi } from 'aws-sdk'
+import { ApiGatewayManagementApi } from '@aws-sdk/client-apigatewaymanagementapi'
 import {
   ConnectionAckMessage,
   NextMessage,
@@ -34,7 +34,6 @@ export const postToConnection = (server: ServerClosure) =>
     await api
       .postToConnection({
         ConnectionId,
-        Data: JSON.stringify(message),
+        Data: Buffer.from(JSON.stringify(message)),
       })
-      .promise()
   }

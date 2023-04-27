@@ -13,7 +13,11 @@ export default {
   ],
   external: [
     // peer deps
-    'aws-sdk',
+    '@aws-sdk/client-sfn',
+    '@aws-sdk/lib-dynamodb',
+    '@aws-sdk/util-dynamodb',
+    '@aws-sdk/client-dynamodb',
+    '@aws-sdk/client-apigatewaymanagementapi',
     'graphql',
     'graphql/execution/execute',
     'graphql/execution/values',

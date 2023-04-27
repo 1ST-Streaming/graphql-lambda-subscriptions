@@ -1,6 +1,6 @@
-import { StepFunctions } from 'aws-sdk'
 import { ConnectionInitMessage, MessageType } from 'graphql-ws'
-import { StateFunctionInput, MessageHandler } from '../types'
+import { SFNClient, StartExecutionCommand } from '@aws-sdk/client-sfn'
+import { MessageHandler } from '../types'
 import { postToConnection } from '../utils/postToConnection'
 import { deleteConnection } from '../utils/deleteConnection'
 import { defaultTTL } from '../utils/defaultTTL'
@@ -9,23 +9,21 @@ import { defaultTTL } from '../utils/defaultTTL'
 export const connection_init: MessageHandler<ConnectionInitMessage> =
   async ({ server, event, message }) => {
     try {
-      const payload = await server.onConnectionInit?.({ event, message }) ?? message.payload ?? {}
+      const payload = (await server.onConnectionInit?.({ event, message })) ?? message.payload ?? {}
 
       if (server.pingpong) {
-        await new StepFunctions()
-          .startExecution({
-            stateMachineArn: server.pingpong.machine,
-            name: event.requestContext.connectionId,
-            input: JSON.stringify({
-              connectionId: event.requestContext.connectionId,
-              domainName: event.requestContext.domainName,
-              stage: event.requestContext.stage,
-              state: 'PING',
-              choice: 'WAIT',
-              seconds: server.pingpong.delay,
-            } as StateFunctionInput),
-          })
-          .promise()
+        await new SFNClient({}).send(new StartExecutionCommand({
+          name: event.requestContext.connectionId,
+          stateMachineArn: server.pingpong.machine,
+          input: JSON.stringify({
+            connectionId: event.requestContext.connectionId,
+            domainName: event.requestContext.domainName,
+            stage: event.requestContext.stage,
+            state: 'PING',
+            choice: 'WAIT',
+            seconds: server.pingpong.delay,
+          }),
+        }))
       }
 
       // Write to persistence
