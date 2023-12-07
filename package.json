@@ -10,6 +10,9 @@
     "import": "./dist/index.mjs",
     "require": "./dist/index.cjs"
   },
+  "files": [
+    "./dist/*"
+  ],
   "engines": {
     "node": "^14.13 || >=16"
   },
@@ -17,13 +20,14 @@
   "homepage": "https://github.com/reconbot/graphql-lambda-subscriptions",
   "scripts": {
     "test": "mocha",
-    "build": "npm run clean && tsc -p tsconfig-build.json && rollup -c && node -r esbuild-register bundle-types",
+    "build": "npm run clean && tsc -p tsconfig-build.json && rollup -c && node --loader esbuild-register/loader -r esbuild-register bundle-types.ts",
     "clean": "rm -rf dist-ts dist",
     "docs": "typedoc --options typedoc.js lib/index.ts",
     "format": "eslint lib/**/*.ts lib/*.ts --fix",
     "lint": "tsc && eslint lib/**/*.ts lib/*.ts",
     "prepublishOnly": "npm run build",
-    "semantic-release": "semantic-release"
+    "semantic-release": "semantic-release",
+    "git-publish": "npm run build && npx git-publish -o -r git@github.com:1ST-Streaming/graphql-lambda-subscriptions.git -b dist"
   },
   "keywords": [
     "graphql",
